@@ -12,11 +12,17 @@ Course project for **BİL403 — Social Networks**, Ali Hakan Kıncal.
 
 ## Interactive explorer
 
-The **[live explorer](https://akincal.github.io/startup-investment-network-analysis/)** renders the
-innermost **6-core** — "the dense heart of the ecosystem" (516 nodes) — entirely in the browser
-(Cytoscape.js, no backend). You can search any investor or company, colour nodes by **type** or by
-**detected community**, and click any node to focus its neighbourhood and inspect its degree, total
-capital and community. Node size encodes each actor's degree in the *full* 22k-node network.
+The **[live explorer](https://akincal.github.io/startup-investment-network-analysis/)** runs entirely
+in the browser (no backend) and offers two views you can toggle between:
+
+- **2D** (Cytoscape.js) — the innermost **6-core** (516 nodes), "the dense heart of the ecosystem":
+  a clean, readable force layout for analysis.
+- **3D** (Three.js / `3d-force-graph`) — the wider **4-core** as a 3,817-node auto-rotating *galaxy*;
+  click any node to fly the camera to it and light up its connections.
+
+Both views share the same controls: search any investor or company, colour nodes by **type** or by
+**detected community**, and click a node to inspect its degree, total capital and community. Node size
+encodes each actor's degree in the *full* 22k-node network.
 
 ## Research questions
 
