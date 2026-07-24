@@ -3,120 +3,113 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Startup Investment Network · 6-core Explorer</title>
-<meta name="description" content="Interactive explorer of the innermost 6-core of a bipartite investor–company network built from 52K Crunchbase records." />
+<title>Startup Investment Network · Interactive Explorer</title>
+<meta name="description" content="Interactive 2D & 3D explorer of a bipartite investor–company network built from 52K Crunchbase records." />
 <script src="https://unpkg.com/layout-base@2.0.1/layout-base.js"></script>
 <script src="https://unpkg.com/cose-base@2.2.0/cose-base.js"></script>
 <script src="https://unpkg.com/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
 <script src="https://unpkg.com/cytoscape-fcose@2.2.0/cytoscape-fcose.js"></script>
 <style>
   :root {
-    --plane:      #0d0d0d;
-    --surface:    #17181a;
-    --surface-2:  #1f2124;
-    --ink:        #ffffff;
-    --ink-2:      #c3c2b7;
-    --muted:      #898781;
-    --hair:       rgba(255,255,255,0.10);
-    --hair-2:     rgba(255,255,255,0.06);
-    /* validated dark categorical slots (dataviz reference palette) */
-    --investor:   #3987e5;  /* blue  */
-    --company:    #d95926;  /* orange */
+    --plane:#0d0d0d; --surface:#17181a; --surface-2:#1f2124;
+    --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
+    --hair:rgba(255,255,255,.10); --hair-2:rgba(255,255,255,.06);
+    --investor:#3987e5; --company:#d95926;
     --c1:#3987e5; --c2:#008300; --c3:#d55181; --c4:#c98500;
     --c5:#199e70; --c6:#d95926; --c7:#9085e9; --other:#6d6b64;
-    --accent:     #3987e5;
+    --accent:#3987e5;
   }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
-  body {
-    background: var(--plane); color: var(--ink);
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    -webkit-font-smoothing: antialiased;
-    display: grid; grid-template-columns: 320px 1fr; grid-template-rows: auto 1fr;
-    grid-template-areas: "head head" "side stage"; height: 100vh; overflow: hidden;
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--plane); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased;
+    display:grid; grid-template-columns:320px 1fr; grid-template-rows:auto 1fr;
+    grid-template-areas:"head head" "side stage"; height:100vh; overflow:hidden;
   }
-  header {
-    grid-area: head; padding: 14px 20px; border-bottom: 1px solid var(--hair);
-    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; background: var(--surface);
-  }
-  header h1 { font-size: 16px; margin: 0; letter-spacing: .2px; }
-  header .sub { color: var(--muted); font-size: 12.5px; }
-  header a { margin-left: auto; color: var(--accent); text-decoration: none; font-size: 12.5px; }
-  header a:hover { text-decoration: underline; }
+  header{grid-area:head; padding:12px 20px; border-bottom:1px solid var(--hair);
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:var(--surface)}
+  header h1{font-size:16px; margin:0; letter-spacing:.2px}
+  header .sub{color:var(--muted); font-size:12.5px}
+  header .spacer{flex:1}
+  header a{color:var(--accent); text-decoration:none; font-size:12.5px}
+  header a:hover{text-decoration:underline}
 
-  aside {
-    grid-area: side; background: var(--surface); border-right: 1px solid var(--hair);
-    padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px;
-  }
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .stat { background: var(--surface-2); border: 1px solid var(--hair-2); border-radius: 10px; padding: 9px 11px; }
-  .stat b { display: block; font-size: 18px; }
-  .stat span { font-size: 11px; color: var(--muted); }
+  .seg{display:flex; background:var(--surface-2); border:1px solid var(--hair); border-radius:9px; padding:3px}
+  .seg button{border:0; background:transparent; color:var(--ink-2); font-size:12.5px;
+    padding:6px 12px; border-radius:7px; cursor:pointer; font-family:inherit}
+  .seg button[aria-pressed="true"]{background:var(--accent); color:#fff}
 
-  .block h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 0 0 8px; }
-  #search {
-    width: 100%; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--hair);
-    background: var(--surface-2); color: var(--ink); font-size: 13px; outline: none;
-  }
-  #search:focus { border-color: var(--accent); }
-  #searchHint { font-size: 11px; color: var(--muted); margin-top: 6px; min-height: 14px; }
+  aside{grid-area:side; background:var(--surface); border-right:1px solid var(--hair);
+    padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:18px}
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .stat{background:var(--surface-2); border:1px solid var(--hair-2); border-radius:10px; padding:9px 11px}
+  .stat b{display:block; font-size:18px}
+  .stat span{font-size:11px; color:var(--muted)}
 
-  .seg { display: flex; background: var(--surface-2); border: 1px solid var(--hair); border-radius: 9px; padding: 3px; }
-  .seg button { flex: 1; border: 0; background: transparent; color: var(--ink-2); font-size: 12.5px;
-    padding: 6px 8px; border-radius: 7px; cursor: pointer; font-family: inherit; }
-  .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .block h2{font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin:0 0 8px}
+  .block .seg{width:100%}
+  .block .seg button{flex:1}
+  #search{width:100%; padding:9px 11px; border-radius:9px; border:1px solid var(--hair);
+    background:var(--surface-2); color:var(--ink); font-size:13px; outline:none}
+  #search:focus{border-color:var(--accent)}
+  #searchHint{font-size:11px; color:var(--muted); margin-top:6px; min-height:14px}
 
-  .checks { display: flex; flex-direction: column; gap: 7px; }
-  .checks label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
-  .checks input { accent-color: var(--accent); }
+  .checks{display:flex; flex-direction:column; gap:7px}
+  .checks label{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-2); cursor:pointer}
+  .checks input{accent-color:var(--accent)}
 
-  .legend { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
-  .legend .row { display: flex; align-items: center; gap: 8px; }
-  .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
-  .swatch.dot { border-radius: 50%; }
+  .legend{display:flex; flex-direction:column; gap:6px; font-size:12.5px; color:var(--ink-2)}
+  .legend .row{display:flex; align-items:center; gap:8px}
+  .swatch{width:12px; height:12px; border-radius:3px; flex:none}
+  .swatch.dot{border-radius:50%}
 
-  .lead { display: flex; flex-direction: column; gap: 2px; }
-  .lead button { display: flex; justify-content: space-between; gap: 8px; align-items: center;
-    background: none; border: 0; border-radius: 7px; padding: 6px 8px; cursor: pointer;
-    color: var(--ink-2); font-family: inherit; font-size: 12.5px; text-align: left; width: 100%; }
-  .lead button:hover { background: var(--surface-2); color: var(--ink); }
-  .lead .rank { color: var(--muted); width: 16px; font-variant-numeric: tabular-nums; }
-  .lead .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .lead .dg { font-variant-numeric: tabular-nums; color: var(--muted); }
+  .lead{display:flex; flex-direction:column; gap:2px}
+  .lead button{display:flex; justify-content:space-between; gap:8px; align-items:center;
+    background:none; border:0; border-radius:7px; padding:6px 8px; cursor:pointer;
+    color:var(--ink-2); font-family:inherit; font-size:12.5px; text-align:left; width:100%}
+  .lead button:hover{background:var(--surface-2); color:var(--ink)}
+  .lead .rank{color:var(--muted); width:16px; font-variant-numeric:tabular-nums}
+  .lead .nm{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .lead .dg{font-variant-numeric:tabular-nums; color:var(--muted)}
 
-  .stage { grid-area: stage; position: relative; }
-  #cy { position: absolute; inset: 0; }
-  .foot { position: absolute; left: 12px; bottom: 10px; font-size: 11px; color: var(--muted); pointer-events: none; }
+  .stage{grid-area:stage; position:relative; background:var(--plane)}
+  #cy,#graph3d{position:absolute; inset:0}
+  #graph3d{display:none; background:#050506}
+  .foot{position:absolute; left:12px; bottom:10px; font-size:11px; color:var(--muted); pointer-events:none; z-index:3}
 
-  #detail {
-    position: absolute; right: 14px; top: 14px; width: 260px; background: var(--surface);
-    border: 1px solid var(--hair); border-radius: 12px; padding: 14px; display: none;
-    box-shadow: 0 10px 30px rgba(0,0,0,.45);
-  }
-  #detail.show { display: block; }
-  #detail .type { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; }
-  #detail h3 { margin: 4px 0 10px; font-size: 15px; line-height: 1.25; }
-  #detail dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; font-size: 12.5px; }
-  #detail dt { color: var(--muted); }
-  #detail dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
-  #detail .close { position: absolute; top: 10px; right: 12px; cursor: pointer; color: var(--muted); border: 0; background: none; font-size: 16px; }
+  #detail{position:absolute; right:14px; top:14px; width:260px; background:var(--surface);
+    border:1px solid var(--hair); border-radius:12px; padding:14px; display:none;
+    box-shadow:0 10px 30px rgba(0,0,0,.5); z-index:6}
+  #detail.show{display:block}
+  #detail .type{font-size:11px; text-transform:uppercase; letter-spacing:.6px}
+  #detail h3{margin:4px 0 10px; font-size:15px; line-height:1.25}
+  #detail dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:5px 10px; font-size:12.5px}
+  #detail dt{color:var(--muted)}
+  #detail dd{margin:0; text-align:right; font-variant-numeric:tabular-nums}
+  #detail .close{position:absolute; top:10px; right:12px; cursor:pointer; color:var(--muted); border:0; background:none; font-size:16px}
 
-  #tooltip { position: absolute; pointer-events: none; background: #000; border: 1px solid var(--hair);
-    padding: 4px 8px; border-radius: 6px; font-size: 12px; display: none; z-index: 5; white-space: nowrap; }
+  #tooltip{position:absolute; pointer-events:none; background:#000; border:1px solid var(--hair);
+    padding:4px 8px; border-radius:6px; font-size:12px; display:none; z-index:5; white-space:nowrap}
+  .loading{position:absolute; inset:0; display:grid; place-items:center; color:var(--muted); font-size:13px; z-index:4}
+  .loading.hide{display:none}
 
-  .loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 13px; }
-
-  @media (max-width: 760px) {
-    body { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; grid-template-areas: "head" "side" "stage"; }
-    aside { max-height: 40vh; }
+  @media (max-width:760px){
+    body{grid-template-columns:1fr; grid-template-rows:auto auto 1fr; grid-template-areas:"head" "side" "stage"}
+    aside{max-height:38vh}
   }
 </style>
 </head>
 <body>
 <header>
   <h1>Startup Investment Network</h1>
-  <span class="sub">The 6-core — the dense heart of the ecosystem</span>
-  <a href="https://github.com/akincal/startup-investment-network-analysis" target="_blank" rel="noopener">View analysis on GitHub ↗</a>
+  <span class="sub" id="headSub">The 6-core — the dense heart of the ecosystem</span>
+  <div class="spacer"></div>
+  <div class="seg" id="viewMode">
+    <button data-view="2d" aria-pressed="true">2D</button>
+    <button data-view="3d" aria-pressed="false">3D</button>
+  </div>
+  <a href="https://github.com/akincal/startup-investment-network-analysis" target="_blank" rel="noopener">GitHub ↗</a>
 </header>
 
 <aside>
@@ -157,8 +150,9 @@
 
 <div class="stage">
   <div id="cy"></div>
+  <div id="graph3d"></div>
   <div class="loading" id="loading">Loading network…</div>
-  <div class="foot">Node size = degree in the full 22k-node network · drag to pan · scroll to zoom</div>
+  <div class="foot" id="foot">Node size = degree in the full 22k-node network · drag to pan · scroll to zoom</div>
   <div id="tooltip"></div>
   <div id="detail">
     <button class="close" id="detailClose">×</button>
@@ -169,209 +163,264 @@
 </div>
 
 <script>
-const COMM_COLORS = ['--c1','--c2','--c3','--c4','--c5','--c6','--c7'].map(v =>
-  getComputedStyle(document.documentElement).getPropertyValue(v).trim());
-const OTHER = getComputedStyle(document.documentElement).getPropertyValue('--other').trim();
-const INV = getComputedStyle(document.documentElement).getPropertyValue('--investor').trim();
-const CO  = getComputedStyle(document.documentElement).getPropertyValue('--company').trim();
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const COMM_COLORS = ['--c1','--c2','--c3','--c4','--c5','--c6','--c7'].map(css);
+const OTHER = css('--other'), INV = css('--investor'), CO = css('--company');
 const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-let cy, topCommunities = new Map(), degMin, degMax, colorMode = 'type';
+const state = { view:'2d', colorMode:'type', showInv:true, showCo:true };
+let V2 = null, V3 = null;
+const active = () => state.view === '2d' ? V2 : V3;
 
-fetch('graph.json').then(r => r.json()).then(build);
-
-function nodeSize(deg) {
-  const t = (Math.sqrt(deg) - Math.sqrt(degMin)) / (Math.sqrt(degMax) - Math.sqrt(degMin));
-  return 14 + t * 56;
-}
-function colorFor(d) {
-  if (colorMode === 'type') return d.type === 'investor' ? INV : CO;
-  const idx = topCommunities.get(d.community);
-  return idx === undefined ? OTHER : COMM_COLORS[idx];
-}
-
-function build(data) {
-  const nodes = data.nodes, edges = data.edges, meta = data.meta;
-  degMin = Math.min(...nodes.map(n => n.deg));
-  degMax = Math.max(...nodes.map(n => n.deg));
-
-  // top communities by node count -> palette; rest -> "Other"
+function commMap(nodes) {
   const counts = {};
-  nodes.forEach(n => counts[n.community] = (counts[n.community] || 0) + 1);
-  Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, COMM_COLORS.length)
-    .forEach(([c], i) => topCommunities.set(+c, i));
+  nodes.forEach(n => counts[n.community] = (counts[n.community]||0)+1);
+  const m = new Map();
+  Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0, COMM_COLORS.length)
+    .forEach(([c],i)=> m.set(+c, i));
+  return m;
+}
+function colorForNode(d, topComm) {
+  if (state.colorMode === 'type') return d.type === 'investor' ? INV : CO;
+  const i = topComm.get(d.community);
+  return i === undefined ? OTHER : COMM_COLORS[i];
+}
 
-  // hub threshold: label the 22 highest-degree nodes by default
-  const hubCut = [...nodes].sort((a,b) => b.deg-a.deg)[Math.min(21, nodes.length-1)].deg;
-
-  // stats
+/* ---------- shared sidebar ---------- */
+function syncSidebar() {
+  const v = active();
+  const m = v.meta;
   $('#stats').innerHTML = [
-    [meta.nodes, 'nodes in 6-core'], [meta.edges, 'ties'],
-    [meta.investors, 'investors'], [meta.companies, 'companies'],
-  ].map(([v,l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
-  $('#cInv').textContent = '(' + meta.investors + ')';
-  $('#cCo').textContent = '(' + meta.companies + ')';
-
-  cy = cytoscape({
-    container: $('#cy'),
-    elements: {
-      nodes: nodes.map(d => ({ data: { ...d, sz: nodeSize(d.deg), col: colorFor(d), hub: d.deg >= hubCut ? 1 : 0 } })),
-      edges: edges.map((e,i) => ({ data: { id: 'e'+i, source: e.source, target: e.target } })),
-    },
-    style: [
-      { selector: 'node', style: {
-        'width': 'data(sz)', 'height': 'data(sz)', 'background-color': 'data(col)',
-        'shape': el => el.data('type') === 'investor' ? 'ellipse' : 'round-rectangle',
-        'border-width': 0, 'label': '', 'color': '#fff', 'font-size': 9,
-        'text-outline-color': '#000', 'text-outline-width': 2.4, 'min-zoomed-font-size': 7,
-        'text-valign': 'center', 'text-halign': 'center', 'text-margin-y': -1,
-      }},
-      { selector: 'node[hub = 1]', style: { 'label': 'data(label)' } },
-      { selector: 'edge', style: {
-        'width': 0.7, 'line-color': '#ffffff', 'opacity': 0.10, 'curve-style': 'straight',
-      }},
-      { selector: '.faded', style: { 'opacity': 0.07, 'text-opacity': 0 } },
-      { selector: 'node.hi', style: { 'label': 'data(label)', 'text-opacity': 1, 'z-index': 20,
-        'border-width': 2, 'border-color': '#fff' } },
-      { selector: 'edge.hi', style: { 'opacity': 0.7, 'line-color': '#ffffff', 'width': 1.1, 'z-index': 19 } },
-      { selector: '.hidden', style: { 'display': 'none' } },
-    ],
-    layout: { name: 'preset' }, // real layout run in runLayout() below
-    minZoom: 0.1, maxZoom: 4,
-  });
-
-  runLayout();
-  buildLegend();
-  buildLeaderboard(nodes);
-  wireInteractions();
+    [m.nodes, `nodes in ${m.kcore}-core`], [m.edges, 'ties'],
+    [m.investors, 'investors'], [m.companies, 'companies'],
+  ].map(([val,l]) => `<div class="stat"><b>${val.toLocaleString()}</b><span>${l}</span></div>`).join('');
+  $('#cInv').textContent = '('+m.investors.toLocaleString()+')';
+  $('#cCo').textContent = '('+m.companies.toLocaleString()+')';
+  buildLegend(v);
+  buildLeaderboard(v);
 }
-
-function runLayout() {
-  const opts = {
-    name: 'fcose', quality: 'proof', randomize: true, animate: false,
-    nodeRepulsion: 22000, idealEdgeLength: 85, edgeElasticity: 0.35,
-    gravity: 0.18, gravityRange: 3.2, numIter: 2500,
-    nodeSeparation: 90, nodeDimensionsIncludeLabels: true, packComponents: true,
-    fit: true, padding: 45,
-  };
-  const done = () => { cy.fit(undefined, 45); $('#loading').style.display = 'none'; };
-  let layout;
-  try { layout = cy.layout(opts); }
-  catch (e) { layout = cy.layout({ name: 'cose', animate: false, nodeRepulsion: 14000, idealEdgeLength: 85, padding: 45 }); }
-  layout.one('layoutstop', done);
-  layout.run();
-  // guaranteed fallback: fcose settles asynchronously even with animate:false
-  setTimeout(done, 600);
-}
-
-function recolor() {
-  cy.batch(() => cy.nodes().forEach(n => n.data('col', colorFor(n.data()))));
-}
-
-function buildLegend() {
+function buildLegend(v) {
   const L = $('#legend');
-  if (colorMode === 'type') {
-    L.innerHTML = `
-      <div class="row"><span class="swatch dot" style="background:${INV}"></span>Investor (circle)</div>
-      <div class="row"><span class="swatch" style="background:${CO}"></span>Company (square)</div>`;
+  if (state.colorMode === 'type') {
+    L.innerHTML =
+      `<div class="row"><span class="swatch dot" style="background:${INV}"></span>Investor (${state.view==='2d'?'circle':'sphere'})</div>
+       <div class="row"><span class="swatch" style="background:${CO}"></span>Company (${state.view==='2d'?'square':'cube'})</div>`;
   } else {
-    const rows = [...topCommunities.entries()].sort((a,b)=>a[1]-b[1])
+    const rows = [...v.topComm.entries()].sort((a,b)=>a[1]-b[1])
       .map(([c,i]) => `<div class="row"><span class="swatch" style="background:${COMM_COLORS[i]}"></span>Community ${c}</div>`);
     rows.push(`<div class="row"><span class="swatch" style="background:${OTHER}"></span>Other communities</div>`);
     L.innerHTML = rows.join('');
   }
 }
-
-function buildLeaderboard(nodes) {
-  const top = nodes.filter(n => n.type === 'investor').sort((a,b)=>b.deg-a.deg).slice(0, 10);
+function buildLeaderboard(v) {
+  const top = v.nodes.filter(n => n.type === 'investor').sort((a,b)=>b.deg-a.deg).slice(0,10);
   $('#leaderboard').innerHTML = top.map((n,i) =>
-    `<button data-id="${n.id.replace(/"/g,'&quot;')}"><span class="rank">${i+1}</span><span class="nm">${esc(n.label)}</span><span class="dg">${n.deg}</span></button>`
-  ).join('');
-  $('#leaderboard').querySelectorAll('button').forEach(b =>
-    b.onclick = () => focusNode(cy.getElementById(b.dataset.id)));
-}
-
-function wireInteractions() {
-  // color mode
-  $('#colorMode').querySelectorAll('button').forEach(b => b.onclick = () => {
-    colorMode = b.dataset.mode;
-    $('#colorMode').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
-    recolor(); buildLegend();
-  });
-  // show/hide by type
-  const applyFilter = () => {
-    const inv = $('#showInv').checked, co = $('#showCo').checked;
-    cy.batch(() => cy.nodes().forEach(n => {
-      const on = n.data('type') === 'investor' ? inv : co;
-      n.toggleClass('hidden', !on);
-    }));
-  };
-  $('#showInv').onchange = applyFilter; $('#showCo').onchange = applyFilter;
-
-  // hover tooltip
-  const tip = $('#tooltip');
-  cy.on('mouseover', 'node', e => {
-    const d = e.target.data();
-    tip.innerHTML = `<b>${esc(d.label)}</b> · deg ${d.deg}`;
-    tip.style.display = 'block';
-  });
-  cy.on('mousemove', 'node', e => {
-    const p = e.renderedPosition; tip.style.left = (p.x + 14) + 'px'; tip.style.top = (p.y + 10) + 'px';
-  });
-  cy.on('mouseout', 'node', () => tip.style.display = 'none');
-
-  cy.on('tap', 'node', e => focusNode(e.target));
-  cy.on('tap', e => { if (e.target === cy) clearFocus(); });
-}
-
-function focusNode(n) {
-  if (!n || n.empty()) return;
-  clearFocus();
-  const nb = n.closedNeighborhood();
-  cy.elements().addClass('faded');
-  nb.removeClass('faded'); nb.nodes().addClass('hi'); nb.connectedEdges().addClass('hi'); n.addClass('hi');
-  cy.animate({ center: { eles: n }, zoom: Math.max(cy.zoom(), 1.1) }, { duration: 350 });
-  showDetail(n.data());
-}
-function clearFocus() {
-  cy.elements().removeClass('faded hi');
-  $('#detail').classList.remove('show');
+    `<button data-id="${esc(n.id)}"><span class="rank">${i+1}</span><span class="nm">${esc(n.label)}</span><span class="dg">${n.deg}</span></button>`).join('');
+  $('#leaderboard').querySelectorAll('button').forEach(b => b.onclick = () => active().focus(b.dataset.id));
 }
 
 function showDetail(d) {
-  $('#dType').textContent = d.type; $('#dType').style.color = colorMode === 'type' ? (d.type==='investor'?INV:CO) : '#c3c2b7';
+  $('#dType').textContent = d.type;
+  $('#dType').style.color = state.colorMode==='type' ? (d.type==='investor'?INV:CO) : 'var(--ink-2)';
   $('#dName').textContent = d.label;
   const rows = [
     ['Degree (full network)', d.deg],
-    ['Ties within 6-core', d.coreDeg],
-    ['Total capital', d.capital ? '$' + d.capital + 'B' : '—'],
+    ['Ties within core', d.coreDeg],
+    ['Total capital', d.capital ? '$'+d.capital+'B' : '—'],
     ['Category', d.category || '—'],
     ['Region', d.region || '—'],
     ['Community', d.community],
   ];
-  $('#dList').innerHTML = rows.map(([k,v]) => `<dt>${k}</dt><dd>${esc(String(v))}</dd>`).join('');
+  $('#dList').innerHTML = rows.map(([k,val]) => `<dt>${k}</dt><dd>${esc(String(val))}</dd>`).join('');
   $('#detail').classList.add('show');
 }
-$('#detailClose').onclick = () => clearFocus();
+$('#detailClose').onclick = () => active().clearFocus();
 
-// search
+/* ---------- 2D view (Cytoscape) ---------- */
+function makeView2D(data) {
+  const nodes = data.nodes, meta = data.meta;
+  const topComm = commMap(nodes);
+  const degMin = Math.min(...nodes.map(n=>n.deg)), degMax = Math.max(...nodes.map(n=>n.deg));
+  const sz = deg => 14 + (Math.sqrt(deg)-Math.sqrt(degMin))/(Math.sqrt(degMax)-Math.sqrt(degMin))*56;
+  const hubCut = [...nodes].sort((a,b)=>b.deg-a.deg)[Math.min(21,nodes.length-1)].deg;
+
+  const cy = cytoscape({
+    container: $('#cy'),
+    elements: {
+      nodes: nodes.map(d => ({ data:{...d, sz:sz(d.deg), col:colorForNode(d,topComm), hub:d.deg>=hubCut?1:0} })),
+      edges: data.edges.map((e,i) => ({ data:{id:'e'+i, source:e.source, target:e.target} })),
+    },
+    style: [
+      { selector:'node', style:{ 'width':'data(sz)','height':'data(sz)','background-color':'data(col)',
+        'shape':el=>el.data('type')==='investor'?'ellipse':'round-rectangle','border-width':0,'label':'',
+        'color':'#fff','font-size':9,'text-outline-color':'#000','text-outline-width':2.4,'min-zoomed-font-size':7,
+        'text-valign':'center','text-halign':'center','text-margin-y':-1 }},
+      { selector:'node[hub = 1]', style:{ 'label':'data(label)' }},
+      { selector:'edge', style:{ 'width':0.7,'line-color':'#fff','opacity':0.10,'curve-style':'straight' }},
+      { selector:'.faded', style:{ 'opacity':0.07,'text-opacity':0 }},
+      { selector:'node.hi', style:{ 'label':'data(label)','text-opacity':1,'z-index':20,'border-width':2,'border-color':'#fff' }},
+      { selector:'edge.hi', style:{ 'opacity':0.7,'line-color':'#fff','width':1.1,'z-index':19 }},
+      { selector:'.hidden', style:{ 'display':'none' }},
+    ],
+    layout:{ name:'preset' }, minZoom:0.1, maxZoom:4,
+  });
+
+  const tip = $('#tooltip');
+  cy.on('mouseover','node', e => { const d=e.target.data(); tip.innerHTML=`<b>${esc(d.label)}</b> · deg ${d.deg}`; tip.style.display='block'; });
+  cy.on('mousemove','node', e => { const p=e.renderedPosition; tip.style.left=(p.x+14)+'px'; tip.style.top=(p.y+10)+'px'; });
+  cy.on('mouseout','node', () => tip.style.display='none');
+  cy.on('tap','node', e => V2.focus(e.target.id()));
+  cy.on('tap', e => { if (e.target === cy) V2.clearFocus(); });
+
+  let laidOut = false;
+  function layout() {
+    const done = () => { cy.fit(undefined,45); $('#loading').classList.add('hide'); };
+    let l;
+    try { l = cy.layout({ name:'fcose', quality:'proof', randomize:true, animate:false,
+      nodeRepulsion:22000, idealEdgeLength:85, edgeElasticity:0.35, gravity:0.18, gravityRange:3.2,
+      numIter:2500, nodeSeparation:90, nodeDimensionsIncludeLabels:true, packComponents:true, fit:true, padding:45 }); }
+    catch(e){ l = cy.layout({ name:'cose', animate:false, nodeRepulsion:14000, idealEdgeLength:85, padding:45 }); }
+    l.one('layoutstop', done); l.run(); setTimeout(done, 600); laidOut = true;
+  }
+
+  return {
+    kind:'2d', cy, nodes, meta, topComm,
+    recolor(){ cy.batch(()=> cy.nodes().forEach(n => n.data('col', colorForNode(n.data(), topComm)))); },
+    applyFilter(inv,co){ cy.batch(()=> cy.nodes().forEach(n => n.toggleClass('hidden', !(n.data('type')==='investor'?inv:co)))); },
+    focus(id){ const n=cy.getElementById(id); if(!n||n.empty())return; this.clearFocus();
+      const nb=n.closedNeighborhood(); cy.elements().addClass('faded');
+      nb.removeClass('faded'); nb.nodes().addClass('hi'); nb.connectedEdges().addClass('hi'); n.addClass('hi');
+      cy.animate({center:{eles:n}, zoom:Math.max(cy.zoom(),1.1)},{duration:350}); showDetail(n.data()); },
+    clearFocus(){ cy.elements().removeClass('faded hi'); $('#detail').classList.remove('show'); },
+    searchInput(q){ if(!q){cy.nodes().removeClass('faded hi'); return 0;} const m=cy.nodes().filter(n=>n.data('label').toLowerCase().includes(q));
+      cy.elements().addClass('faded'); m.removeClass('faded').addClass('hi'); return m.length; },
+    searchEnter(q){ const b=cy.nodes().filter(n=>n.data('label').toLowerCase().includes(q)).sort((a,b)=>b.data('deg')-a.data('deg'))[0]; if(b) this.focus(b.id()); },
+    show(){ $('#cy').style.display='block'; if(!laidOut){ $('#loading').classList.remove('hide'); layout(); } else { cy.resize(); cy.fit(undefined,45); } },
+    hide(){ $('#cy').style.display='none'; },
+  };
+}
+
+/* ---------- 3D view (3d-force-graph / Three.js) ---------- */
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('load '+src)); document.head.appendChild(s); }); }
+
+async function ensure3D(){
+  if (V3) return;
+  $('#loading').textContent = 'Loading 3D galaxy (3,817 nodes)…';
+  $('#loading').classList.remove('hide');
+  if (typeof ForceGraph3D === 'undefined')
+    await loadScript('https://unpkg.com/3d-force-graph@1/dist/3d-force-graph.min.js');
+  const data = await fetch('graph3d.json').then(r=>r.json());
+  V3 = makeView3D(data);
+}
+
+function makeView3D(data) {
+  const nodes = data.nodes, meta = data.meta;
+  const topComm = commMap(nodes);
+  const byId = new Map(nodes.map(n=>[n.id,n]));
+  const links = data.edges.map(e => ({ source:e.source, target:e.target }));
+
+  // adjacency for neighbourhood highlight
+  const adj = new Map(nodes.map(n=>[n.id, new Set()]));
+  links.forEach(l => { adj.get(l.source).add(l.target); adj.get(l.target).add(l.source); });
+
+  const hl = new Set();               // highlighted node ids ('' selection = empty)
+  const lid = l => (typeof l.source==='object'?l.source.id:l.source);
+  const rid = l => (typeof l.target==='object'?l.target.id:l.target);
+  const linkOn = l => hl.has(lid(l)) && hl.has(rid(l));
+
+  const nodePaint = d => (hl.size && !hl.has(d.id)) ? '#26262a' : colorForNode(d, topComm);
+  const linkPaint = l => hl.size ? (linkOn(l) ? 'rgba(130,180,255,0.55)' : 'rgba(255,255,255,0.02)') : 'rgba(255,255,255,0.12)';
+
+  const G = ForceGraph3D({ controlType: 'orbit' })($('#graph3d'))
+    .backgroundColor('#050506')
+    .graphData({ nodes, links })
+    .nodeVal(d => Math.max(d.deg, 2))
+    .nodeRelSize(1.4)
+    .nodeColor(nodePaint)
+    .nodeOpacity(0.95)
+    .nodeResolution(10)
+    .nodeLabel(d => `<div style="font:12px system-ui;color:#fff;background:#000;border:1px solid rgba(255,255,255,.15);padding:3px 7px;border-radius:6px">${esc(d.label)} · deg ${d.deg}</div>`)
+    .linkColor(linkPaint)
+    .linkWidth(0)
+    .linkOpacity(0.12)
+    .linkDirectionalParticles(l => linkOn(l) ? 2 : 0)
+    .linkDirectionalParticleWidth(1.6)
+    .linkDirectionalParticleSpeed(0.012)
+    .nodeVisibility(d => d.type==='investor' ? state.showInv : state.showCo)
+    .linkVisibility(l => { const s=byId.get(lid(l)), t=byId.get(rid(l));
+      return (s.type==='investor'?state.showInv:state.showCo) && (t.type==='investor'?state.showInv:state.showCo); })
+    .cooldownTime(6000).warmupTicks(30)
+    .onNodeClick(n => V3.focus(n.id))
+    .onBackgroundClick(() => V3.clearFocus());
+
+  G.d3Force('charge').strength(-45);
+  const ctrl = G.controls(); ctrl.autoRotate = true; ctrl.autoRotateSpeed = 0.55;
+
+  const repaint = () => G.nodeColor(nodePaint).linkColor(linkPaint).linkDirectionalParticles(l => linkOn(l)?2:0);
+
+  return {
+    kind:'3d', graph:G, nodes, meta, topComm,
+    recolor(){ repaint(); },
+    applyFilter(){ G.nodeVisibility(G.nodeVisibility()).linkVisibility(G.linkVisibility()); },
+    focus(id){ const n = byId.get(id); if(!n) return;
+      hl.clear(); hl.add(id); adj.get(id).forEach(x=>hl.add(x)); repaint();
+      ctrl.autoRotate = false;
+      const dist = 140, r = 1 + dist/Math.hypot(n.x||1, n.y||1, n.z||1);
+      G.cameraPosition({x:(n.x||0)*r, y:(n.y||0)*r, z:(n.z||0)*r}, n, 1400);
+      showDetail(n); },
+    clearFocus(){ hl.clear(); repaint(); ctrl.autoRotate = true; $('#detail').classList.remove('show'); },
+    searchInput(q){ hl.clear(); if(q) nodes.forEach(n=>{ if(n.label.toLowerCase().includes(q)) hl.add(n.id); }); repaint();
+      return q ? hl.size : (hl.clear(), repaint(), 0); },
+    searchEnter(q){ const b = nodes.filter(n=>n.label.toLowerCase().includes(q)).sort((a,b)=>b.deg-a.deg)[0]; if(b) this.focus(b.id); },
+    show(){ const el=$('#graph3d'); el.style.display='block'; G.width(el.clientWidth).height(el.clientHeight); },
+    hide(){ $('#graph3d').style.display='none'; },
+  };
+}
+
+/* ---------- view switching ---------- */
+async function setView(view) {
+  if (view === state.view) return;
+  $('#viewMode').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.view===view));
+  active() && active().hide();
+  active() && active().clearFocus();
+  $('#detail').classList.remove('show');
+  state.view = view;
+  $('#headSub').textContent = view==='2d'
+    ? 'The 6-core — the dense heart of the ecosystem'
+    : 'The 4-core — a 3,817-node galaxy in 3D';
+  $('#foot').textContent = view==='2d'
+    ? 'Node size = degree in the full 22k-node network · drag to pan · scroll to zoom'
+    : 'Node size = degree · drag to orbit · scroll to zoom · auto-rotates until you pick a node';
+
+  if (view === '3d') { try { await ensure3D(); } catch(e){ alert('Could not load the 3D view: '+e.message); setView('2d'); return; } }
+  $('#loading').classList.add('hide');
+  const v = active();
+  v.show(); v.recolor(); v.applyFilter(state.showInv, state.showCo);
+  syncSidebar();
+}
+
+/* ---------- wire shared controls ---------- */
+$('#viewMode').querySelectorAll('button').forEach(b => b.onclick = () => setView(b.dataset.view));
+$('#colorMode').querySelectorAll('button').forEach(b => b.onclick = () => {
+  state.colorMode = b.dataset.mode;
+  $('#colorMode').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x===b));
+  active().recolor(); buildLegend(active());
+});
+const applyFilter = () => { state.showInv=$('#showInv').checked; state.showCo=$('#showCo').checked; active().applyFilter(state.showInv, state.showCo); };
+$('#showInv').onchange = applyFilter; $('#showCo').onchange = applyFilter;
 $('#search').addEventListener('input', e => {
   const q = e.target.value.trim().toLowerCase();
-  if (!q) { cy.nodes().removeClass('faded hi'); $('#searchHint').textContent = ''; return; }
-  const matches = cy.nodes().filter(n => n.data('label').toLowerCase().includes(q));
-  cy.elements().addClass('faded');
-  matches.removeClass('faded').addClass('hi');
-  $('#searchHint').textContent = matches.length ? `${matches.length} match${matches.length>1?'es':''}` : 'no matches';
+  const n = active().searchInput(q);
+  $('#searchHint').textContent = q ? (n ? `${n} match${n>1?'es':''}` : 'no matches') : '';
 });
-$('#search').addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  const q = e.target.value.trim().toLowerCase();
-  const best = cy.nodes().filter(n => n.data('label').toLowerCase().includes(q))
-    .sort((a,b) => b.data('deg') - a.data('deg'))[0];
-  if (best) focusNode(best);
-});
+$('#search').addEventListener('keydown', e => { if(e.key==='Enter') active().searchEnter(e.target.value.trim().toLowerCase()); });
 
-function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+/* ---------- boot ---------- */
+fetch('graph.json').then(r=>r.json()).then(data => {
+  V2 = makeView2D(data);
+  V2.show(); syncSidebar();
+});
 </script>
 </body>
 </html>
