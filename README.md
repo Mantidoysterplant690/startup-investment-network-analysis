@@ -4,11 +4,19 @@
 graph built from **52,868 Crunchbase investment records**, analyzed with centrality, small-world,
 core–periphery and community-detection methods.
 
-> 🔗 **Live interactive explorer:** _coming soon (GitHub Pages)_ · 📄 [Full report (PDF)](report/projeraporu_221101064_Ali_Hakan_Kincal.pdf)
+> 🔗 **[Live interactive explorer →](https://akincal.github.io/startup-investment-network-analysis/)** · 📄 [Full report (PDF)](report/projeraporu_221101064_Ali_Hakan_Kincal.pdf)
 
 Course project for **BİL403 — Social Networks**, Ali Hakan Kıncal.
 
 ---
+
+## Interactive explorer
+
+The **[live explorer](https://akincal.github.io/startup-investment-network-analysis/)** renders the
+innermost **6-core** — "the dense heart of the ecosystem" (516 nodes) — entirely in the browser
+(Cytoscape.js, no backend). You can search any investor or company, colour nodes by **type** or by
+**detected community**, and click any node to focus its neighbourhood and inspect its degree, total
+capital and community. Node size encodes each actor's degree in the *full* 22k-node network.
 
 ## Research questions
 
