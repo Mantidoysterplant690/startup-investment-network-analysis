@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Startup Investment Network · 6-core Explorer</title>
+<meta name="description" content="Interactive explorer of the innermost 6-core of a bipartite investor–company network built from 52K Crunchbase records." />
+<script src="https://unpkg.com/layout-base@2.0.1/layout-base.js"></script>
+<script src="https://unpkg.com/cose-base@2.2.0/cose-base.js"></script>
+<script src="https://unpkg.com/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
+<script src="https://unpkg.com/cytoscape-fcose@2.2.0/cytoscape-fcose.js"></script>
+<style>
+  :root {
+    --plane:      #0d0d0d;
+    --surface:    #17181a;
+    --surface-2:  #1f2124;
+    --ink:        #ffffff;
+    --ink-2:      #c3c2b7;
+    --muted:      #898781;
+    --hair:       rgba(255,255,255,0.10);
+    --hair-2:     rgba(255,255,255,0.06);
+    /* validated dark categorical slots (dataviz reference palette) */
+    --investor:   #3987e5;  /* blue  */
+    --company:    #d95926;  /* orange */
+    --c1:#3987e5; --c2:#008300; --c3:#d55181; --c4:#c98500;
+    --c5:#199e70; --c6:#d95926; --c7:#9085e9; --other:#6d6b64;
+    --accent:     #3987e5;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--plane); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: grid; grid-template-columns: 320px 1fr; grid-template-rows: auto 1fr;
+    grid-template-areas: "head head" "side stage"; height: 100vh; overflow: hidden;
+  }
+  header {
+    grid-area: head; padding: 14px 20px; border-bottom: 1px solid var(--hair);
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; background: var(--surface);
+  }
+  header h1 { font-size: 16px; margin: 0; letter-spacing: .2px; }
+  header .sub { color: var(--muted); font-size: 12.5px; }
+  header a { margin-left: auto; color: var(--accent); text-decoration: none; font-size: 12.5px; }
+  header a:hover { text-decoration: underline; }
+
+  aside {
+    grid-area: side; background: var(--surface); border-right: 1px solid var(--hair);
+    padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px;
+  }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { background: var(--surface-2); border: 1px solid var(--hair-2); border-radius: 10px; padding: 9px 11px; }
+  .stat b { display: block; font-size: 18px; }
+  .stat span { font-size: 11px; color: var(--muted); }
+
+  .block h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 0 0 8px; }
+  #search {
+    width: 100%; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--hair);
+    background: var(--surface-2); color: var(--ink); font-size: 13px; outline: none;
+  }
+  #search:focus { border-color: var(--accent); }
+  #searchHint { font-size: 11px; color: var(--muted); margin-top: 6px; min-height: 14px; }
+
+  .seg { display: flex; background: var(--surface-2); border: 1px solid var(--hair); border-radius: 9px; padding: 3px; }
+  .seg button { flex: 1; border: 0; background: transparent; color: var(--ink-2); font-size: 12.5px;
+    padding: 6px 8px; border-radius: 7px; cursor: pointer; font-family: inherit; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+  .checks { display: flex; flex-direction: column; gap: 7px; }
+  .checks label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
+  .checks input { accent-color: var(--accent); }
+
+  .legend { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
+  .legend .row { display: flex; align-items: center; gap: 8px; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+  .swatch.dot { border-radius: 50%; }
+
+  .lead { display: flex; flex-direction: column; gap: 2px; }
+  .lead button { display: flex; justify-content: space-between; gap: 8px; align-items: center;
+    background: none; border: 0; border-radius: 7px; padding: 6px 8px; cursor: pointer;
+    color: var(--ink-2); font-family: inherit; font-size: 12.5px; text-align: left; width: 100%; }
+  .lead button:hover { background: var(--surface-2); color: var(--ink); }
+  .lead .rank { color: var(--muted); width: 16px; font-variant-numeric: tabular-nums; }
+  .lead .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lead .dg { font-variant-numeric: tabular-nums; color: var(--muted); }
+
+  .stage { grid-area: stage; position: relative; }
+  #cy { position: absolute; inset: 0; }
+  .foot { position: absolute; left: 12px; bottom: 10px; font-size: 11px; color: var(--muted); pointer-events: none; }
+
+  #detail {
+    position: absolute; right: 14px; top: 14px; width: 260px; background: var(--surface);
+    border: 1px solid var(--hair); border-radius: 12px; padding: 14px; display: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,.45);
+  }
+  #detail.show { display: block; }
+  #detail .type { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; }
+  #detail h3 { margin: 4px 0 10px; font-size: 15px; line-height: 1.25; }
+  #detail dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; font-size: 12.5px; }
+  #detail dt { color: var(--muted); }
+  #detail dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+  #detail .close { position: absolute; top: 10px; right: 12px; cursor: pointer; color: var(--muted); border: 0; background: none; font-size: 16px; }
+
+  #tooltip { position: absolute; pointer-events: none; background: #000; border: 1px solid var(--hair);
+    padding: 4px 8px; border-radius: 6px; font-size: 12px; display: none; z-index: 5; white-space: nowrap; }
+
+  .loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 13px; }
+
+  @media (max-width: 760px) {
+    body { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; grid-template-areas: "head" "side" "stage"; }
+    aside { max-height: 40vh; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Startup Investment Network</h1>
+  <span class="sub">The 6-core — the dense heart of the ecosystem</span>
+  <a href="https://github.com/akincal/startup-investment-network-analysis" target="_blank" rel="noopener">View analysis on GitHub ↗</a>
+</header>
+
+<aside>
+  <div class="stats" id="stats"></div>
+
+  <div class="block">
+    <h2>Search</h2>
+    <input id="search" type="text" placeholder="Investor or company…" autocomplete="off" />
+    <div id="searchHint"></div>
+  </div>
+
+  <div class="block">
+    <h2>Colour by</h2>
+    <div class="seg" id="colorMode">
+      <button data-mode="type" aria-pressed="true">Type</button>
+      <button data-mode="community" aria-pressed="false">Community</button>
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>Show</h2>
+    <div class="checks">
+      <label><input type="checkbox" id="showInv" checked> Investors <span id="cInv" style="color:var(--muted)"></span></label>
+      <label><input type="checkbox" id="showCo" checked> Companies <span id="cCo" style="color:var(--muted)"></span></label>
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>Legend</h2>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="block">
+    <h2>Most central investors</h2>
+    <div class="lead" id="leaderboard"></div>
+  </div>
+</aside>
+
+<div class="stage">
+  <div id="cy"></div>
+  <div class="loading" id="loading">Loading network…</div>
+  <div class="foot">Node size = degree in the full 22k-node network · drag to pan · scroll to zoom</div>
+  <div id="tooltip"></div>
+  <div id="detail">
+    <button class="close" id="detailClose">×</button>
+    <div class="type" id="dType"></div>
+    <h3 id="dName"></h3>
+    <dl id="dList"></dl>
+  </div>
+</div>
+
+<script>
+const COMM_COLORS = ['--c1','--c2','--c3','--c4','--c5','--c6','--c7'].map(v =>
+  getComputedStyle(document.documentElement).getPropertyValue(v).trim());
+const OTHER = getComputedStyle(document.documentElement).getPropertyValue('--other').trim();
+const INV = getComputedStyle(document.documentElement).getPropertyValue('--investor').trim();
+const CO  = getComputedStyle(document.documentElement).getPropertyValue('--company').trim();
+const $ = s => document.querySelector(s);
+
+let cy, topCommunities = new Map(), degMin, degMax, colorMode = 'type';
+
+fetch('graph.json').then(r => r.json()).then(build);
+
+function nodeSize(deg) {
+  const t = (Math.sqrt(deg) - Math.sqrt(degMin)) / (Math.sqrt(degMax) - Math.sqrt(degMin));
+  return 14 + t * 56;
+}
+function colorFor(d) {
+  if (colorMode === 'type') return d.type === 'investor' ? INV : CO;
+  const idx = topCommunities.get(d.community);
+  return idx === undefined ? OTHER : COMM_COLORS[idx];
+}
+
+function build(data) {
+  const nodes = data.nodes, edges = data.edges, meta = data.meta;
+  degMin = Math.min(...nodes.map(n => n.deg));
+  degMax = Math.max(...nodes.map(n => n.deg));
+
+  // top communities by node count -> palette; rest -> "Other"
+  const counts = {};
+  nodes.forEach(n => counts[n.community] = (counts[n.community] || 0) + 1);
+  Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, COMM_COLORS.length)
+    .forEach(([c], i) => topCommunities.set(+c, i));
+
+  // hub threshold: label the 22 highest-degree nodes by default
+  const hubCut = [...nodes].sort((a,b) => b.deg-a.deg)[Math.min(21, nodes.length-1)].deg;
+
+  // stats
+  $('#stats').innerHTML = [
+    [meta.nodes, 'nodes in 6-core'], [meta.edges, 'ties'],
+    [meta.investors, 'investors'], [meta.companies, 'companies'],
+  ].map(([v,l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+  $('#cInv').textContent = '(' + meta.investors + ')';
+  $('#cCo').textContent = '(' + meta.companies + ')';
+
+  cy = cytoscape({
+    container: $('#cy'),
+    elements: {
+      nodes: nodes.map(d => ({ data: { ...d, sz: nodeSize(d.deg), col: colorFor(d), hub: d.deg >= hubCut ? 1 : 0 } })),
+      edges: edges.map((e,i) => ({ data: { id: 'e'+i, source: e.source, target: e.target } })),
+    },
+    style: [
+      { selector: 'node', style: {
+        'width': 'data(sz)', 'height': 'data(sz)', 'background-color': 'data(col)',
+        'shape': el => el.data('type') === 'investor' ? 'ellipse' : 'round-rectangle',
+        'border-width': 0, 'label': '', 'color': '#fff', 'font-size': 9,
+        'text-outline-color': '#000', 'text-outline-width': 2.4, 'min-zoomed-font-size': 7,
+        'text-valign': 'center', 'text-halign': 'center', 'text-margin-y': -1,
+      }},
+      { selector: 'node[hub = 1]', style: { 'label': 'data(label)' } },
+      { selector: 'edge', style: {
+        'width': 0.7, 'line-color': '#ffffff', 'opacity': 0.10, 'curve-style': 'straight',
+      }},
+      { selector: '.faded', style: { 'opacity': 0.07, 'text-opacity': 0 } },
+      { selector: 'node.hi', style: { 'label': 'data(label)', 'text-opacity': 1, 'z-index': 20,
+        'border-width': 2, 'border-color': '#fff' } },
+      { selector: 'edge.hi', style: { 'opacity': 0.7, 'line-color': '#ffffff', 'width': 1.1, 'z-index': 19 } },
+      { selector: '.hidden', style: { 'display': 'none' } },
+    ],
+    layout: { name: 'preset' }, // real layout run in runLayout() below
+    minZoom: 0.1, maxZoom: 4,
+  });
+
+  runLayout();
+  buildLegend();
+  buildLeaderboard(nodes);
+  wireInteractions();
+}
+
+function runLayout() {
+  const opts = {
+    name: 'fcose', quality: 'proof', randomize: true, animate: false,
+    nodeRepulsion: 22000, idealEdgeLength: 85, edgeElasticity: 0.35,
+    gravity: 0.18, gravityRange: 3.2, numIter: 2500,
+    nodeSeparation: 90, nodeDimensionsIncludeLabels: true, packComponents: true,
+    fit: true, padding: 45,
+  };
+  const done = () => { cy.fit(undefined, 45); $('#loading').style.display = 'none'; };
+  let layout;
+  try { layout = cy.layout(opts); }
+  catch (e) { layout = cy.layout({ name: 'cose', animate: false, nodeRepulsion: 14000, idealEdgeLength: 85, padding: 45 }); }
+  layout.one('layoutstop', done);
+  layout.run();
+  // guaranteed fallback: fcose settles asynchronously even with animate:false
+  setTimeout(done, 600);
+}
+
+function recolor() {
+  cy.batch(() => cy.nodes().forEach(n => n.data('col', colorFor(n.data()))));
+}
+
+function buildLegend() {
+  const L = $('#legend');
+  if (colorMode === 'type') {
+    L.innerHTML = `
+      <div class="row"><span class="swatch dot" style="background:${INV}"></span>Investor (circle)</div>
+      <div class="row"><span class="swatch" style="background:${CO}"></span>Company (square)</div>`;
+  } else {
+    const rows = [...topCommunities.entries()].sort((a,b)=>a[1]-b[1])
+      .map(([c,i]) => `<div class="row"><span class="swatch" style="background:${COMM_COLORS[i]}"></span>Community ${c}</div>`);
+    rows.push(`<div class="row"><span class="swatch" style="background:${OTHER}"></span>Other communities</div>`);
+    L.innerHTML = rows.join('');
+  }
+}
+
+function buildLeaderboard(nodes) {
+  const top = nodes.filter(n => n.type === 'investor').sort((a,b)=>b.deg-a.deg).slice(0, 10);
+  $('#leaderboard').innerHTML = top.map((n,i) =>
+    `<button data-id="${n.id.replace(/"/g,'&quot;')}"><span class="rank">${i+1}</span><span class="nm">${esc(n.label)}</span><span class="dg">${n.deg}</span></button>`
+  ).join('');
+  $('#leaderboard').querySelectorAll('button').forEach(b =>
+    b.onclick = () => focusNode(cy.getElementById(b.dataset.id)));
+}
+
+function wireInteractions() {
+  // color mode
+  $('#colorMode').querySelectorAll('button').forEach(b => b.onclick = () => {
+    colorMode = b.dataset.mode;
+    $('#colorMode').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    recolor(); buildLegend();
+  });
+  // show/hide by type
+  const applyFilter = () => {
+    const inv = $('#showInv').checked, co = $('#showCo').checked;
+    cy.batch(() => cy.nodes().forEach(n => {
+      const on = n.data('type') === 'investor' ? inv : co;
+      n.toggleClass('hidden', !on);
+    }));
+  };
+  $('#showInv').onchange = applyFilter; $('#showCo').onchange = applyFilter;
+
+  // hover tooltip
+  const tip = $('#tooltip');
+  cy.on('mouseover', 'node', e => {
+    const d = e.target.data();
+    tip.innerHTML = `<b>${esc(d.label)}</b> · deg ${d.deg}`;
+    tip.style.display = 'block';
+  });
+  cy.on('mousemove', 'node', e => {
+    const p = e.renderedPosition; tip.style.left = (p.x + 14) + 'px'; tip.style.top = (p.y + 10) + 'px';
+  });
+  cy.on('mouseout', 'node', () => tip.style.display = 'none');
+
+  cy.on('tap', 'node', e => focusNode(e.target));
+  cy.on('tap', e => { if (e.target === cy) clearFocus(); });
+}
+
+function focusNode(n) {
+  if (!n || n.empty()) return;
+  clearFocus();
+  const nb = n.closedNeighborhood();
+  cy.elements().addClass('faded');
+  nb.removeClass('faded'); nb.nodes().addClass('hi'); nb.connectedEdges().addClass('hi'); n.addClass('hi');
+  cy.animate({ center: { eles: n }, zoom: Math.max(cy.zoom(), 1.1) }, { duration: 350 });
+  showDetail(n.data());
+}
+function clearFocus() {
+  cy.elements().removeClass('faded hi');
+  $('#detail').classList.remove('show');
+}
+
+function showDetail(d) {
+  $('#dType').textContent = d.type; $('#dType').style.color = colorMode === 'type' ? (d.type==='investor'?INV:CO) : '#c3c2b7';
+  $('#dName').textContent = d.label;
+  const rows = [
+    ['Degree (full network)', d.deg],
+    ['Ties within 6-core', d.coreDeg],
+    ['Total capital', d.capital ? '$' + d.capital + 'B' : '—'],
+    ['Category', d.category || '—'],
+    ['Region', d.region || '—'],
+    ['Community', d.community],
+  ];
+  $('#dList').innerHTML = rows.map(([k,v]) => `<dt>${k}</dt><dd>${esc(String(v))}</dd>`).join('');
+  $('#detail').classList.add('show');
+}
+$('#detailClose').onclick = () => clearFocus();
+
+// search
+$('#search').addEventListener('input', e => {
+  const q = e.target.value.trim().toLowerCase();
+  if (!q) { cy.nodes().removeClass('faded hi'); $('#searchHint').textContent = ''; return; }
+  const matches = cy.nodes().filter(n => n.data('label').toLowerCase().includes(q));
+  cy.elements().addClass('faded');
+  matches.removeClass('faded').addClass('hi');
+  $('#searchHint').textContent = matches.length ? `${matches.length} match${matches.length>1?'es':''}` : 'no matches';
+});
+$('#search').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const q = e.target.value.trim().toLowerCase();
+  const best = cy.nodes().filter(n => n.data('label').toLowerCase().includes(q))
+    .sort((a,b) => b.data('deg') - a.data('deg'))[0];
+  if (best) focusNode(best);
+});
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+</script>
+</body>
+</html>
