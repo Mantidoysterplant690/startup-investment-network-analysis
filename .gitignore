@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Large raw / derived data (regenerable — see README "Reproduce")
+crunchbase-investments.csv
+data/crunchbase-investments-fixed.csv
+data/full_bipartite_graph.gml
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Overleaf working copies (LaTeX build artifacts)
+report/overleaf_proje_221101064/
+*.aux
+*.log
+*.out
+*.synctex.gz

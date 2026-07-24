@@ -1,0 +1,214 @@
+% BIL403-503 Sosyal Aglar - Donem Projesi Raporu
+% Derleyici: pdfLaTeX (Overleaf varsayilani)
+% Format isterleri: 12pt Times New Roman, 1.5 satir araligi, 4 kenarda 2cm marjin
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+% Turkce tireleme (Overleaf'te mevcut; yoksa sessizce atlanir)
+\IfFileExists{turkish.ldf}{\usepackage[shorthands=off,turkish]{babel}}{}
+% Times New Roman esdegeri font (Overleaf'te newtx, yoksa mathptmx)
+\IfFileExists{newtxtext.sty}{\usepackage{newtxtext,newtxmath}}{\usepackage{mathptmx}}
+\usepackage[margin=2cm]{geometry}  % dort kenarda 2 cm
+\usepackage{setspace}
+\onehalfspacing                    % 1.5 satir araligi
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
+\usepackage[hidelinks]{hyperref}
+\usepackage{float}
+
+\begin{document}
+
+% ==================== KAPAK SAYFASI ====================
+\begin{titlepage}
+\centering
+\vspace*{0.3cm}
+{\LARGE\bfseries BİL403-503 SOSYAL AĞLAR\par}
+\vspace{0.4cm}
+{\LARGE\bfseries DÖNEM PROJESİ RAPORU\par}
+\vspace{0.8cm}
+{\Large\bfseries Startup Ekosisteminde Yatırımcı--Şirket İlişki Ağının Sosyal Ağ Analizi ile İncelenmesi\par}
+\vspace{1.0cm}
+{\large Ad Soyad: Ali Hakan Kıncal\par}
+\vspace{0.15cm}
+{\large Öğrenci No: 221101064\par}
+\vspace{0.15cm}
+{\large Bölüm: Bilgisayar Mühendisliği\par}
+\vspace{0.15cm}
+{\large Sınıf: 4. Sınıf\par}
+\vspace{0.15cm}
+{\large Tarih: 24.07.2026\par}
+\vspace{0.9cm}
+{\Large\bfseries ÖZET\par}
+\vspace{0.35cm}
+\begin{minipage}{0.92\textwidth}
+\onehalfspacing
+Bu proje, startup finansman ekosistemini bir sosyal ağ olarak modelleyip yapısal özelliklerini incelemektedir. Veri, Crunchbase'in Ekim 2013 tarihli açık veri dökümünden (CC-BY-NC) alınan 52.868 yatırım kaydıdır; her kayıt bir yatırımcı-şirket-fonlama turu üçlüsünü temsil eder. Yatırımcılar ve şirketler iki ayrı düğüm kümesi olacak şekilde yönsüz, ağırlıklı bir iki parçalı (bipartite) ağ, igraph kütüphanesiyle kuruldu. Ağ 22.124 düğüm ve 40.978 kenar içermekte olup yoğunluğu çok düşüktür (0,00034). Derece dağılımı ağır kuyrukludur (MLE ile power-law üsteli $\alpha \approx 1{,}8$--$2{,}0$); ortalama en kısa yol 6,04, çap tahmini 17'dir ve ağ küçük-dünya özelliği gösterir. Derece assortativity katsayısı negatiftir ($-0{,}136$). Betweenness, PageRank, closeness ve özvektör merkeziyetleri ile $k$-core ayrışımı hesaplanmış; ekosistemin 516 düğümlük yoğun bir 6-core çekirdeğe sahip merkez-çeper yapısında olduğu görülmüştür. Yatırımcı ortak-yatırım izdüşümünde Louvain algoritması, 0,44 modülerlikle 54 topluluk bulmuş; en büyük topluluklar coğrafya ve yatırım aşaması eksenlerinde ayrışmaktadır. Düğümlerin \%83,9'u tek bir dev bileşendedir. Bulgular, startup finansmanının literatürle (Hochberg vd., 2007) tutarlı biçimde merkezileşmiş, kümelenmiş ve sendikasyon temelli bir yapı sergilediğini göstermektedir.
+\end{minipage}
+\end{titlepage}
+
+% ==================== GİRİŞ ====================
+\section{Giriş}
+
+Startup ekosistemleri; girişimcilerin, yatırımcıların (melek yatırımcılar, risk sermayesi firmaları, kurumsal yatırımcılar, hızlandırıcı programları) ve destekleyici kurumların karşılıklı bağımlılık içinde bulunduğu karmaşık sosyo-ekonomik ağlardır. Bu ağların yapısı; sermayenin nasıl dağıldığını, hangi şirketlerin daha kolay finansman bulduğunu ve yatırımcılar arasındaki bilgi/güven akışını doğrudan etkiler. Bu projede startup finansman ekosistemi, bir yatırımcı-şirket ilişki ağı olarak modellenip sosyal ağ analizi teknikleriyle incelenmiştir.
+
+Kullanılan veri seti, Crunchbase'in Ekim 2013 tarihinde yayınladığı ve CC-BY-NC lisansı altında sunulan açık veri dökümünün bir türevidir (Crunchbase, 2013). Veri setindeki her satır; yatırım yapılan şirketin kimliği, sektörü ve konumu, yatırımcının kimliği ve konumu, fonlama turunun tipi (tohum, seri A/B/C+, melek vb.), tarihi ve tutarını içerir. Veri 1987--2013 yıllarını kapsayan 52.868 yatırım kaydından oluşmakta; 11.572 benzersiz şirket ile 10.552 benzersiz yatırımcı içermektedir.
+
+Literatürde startup finansman ağları üzerine önemli çalışmalar vardır. Bygrave (1987), VC sendikasyonunu ilk kez bir ağ perspektifiyle incelemiş ve firmaların belirsizliği azaltmak için bilgi paylaşım ağları kurduğunu göstermiştir. Sorenson ve Stuart (2001), sendikasyon ağlarının yatırımların coğrafi dağılımını şekillendirdiğini; merkezi konumdaki VC'lerin ağ bağlantıları sayesinde uzak bölgelere de yatırım yapabildiğini bulmuştur. Hochberg, Ljungqvist ve Lu (2007) ise ağ merkeziyetinin fon performansıyla pozitif ilişkili olduğunu göstermiştir. Bu çalışmalar genellikle tek-modlu yatırımcı ağlarına odaklanırken, bu projede önce ham iki parçalı yapı korunmuş, ardından tek-modlu izdüşüm ayrıca incelenmiştir.
+
+Yanıt aranan sorular: (1) Ağın temel yapısal özellikleri (yoğunluk, derece dağılımı, kümelenme, bileşenler) nelerdir? (2) Ağ, ``zengin daha zenginleşir'' (ağır kuyruklu derece dağılımı), ``dev bileşen'' ve ``küçük-dünya'' örüntülerini sergiliyor mu? (3) Hangi aktörler merkezi konumdadır ve farklı merkeziyet ölçümleri (derece, betweenness, PageRank) aynı aktörleri mi işaret etmektedir? (4) Yatırımcılar arasındaki ortak-yatırım ağında anlamlı topluluklar (yatırım klikleri) var mıdır?
+
+% ==================== METOTLAR ====================
+\section{Metotlar}
+
+Analizler Python'da, ana kütüphane olarak C çekirdekli ve büyük ağlarda yüksek performanslı igraph (Csárdi ve Nepusz, 2006) kullanılarak yapılmıştır; yalnızca iki parçalı kümelenme katsayısı için, bu ölçümün hazır bir uygulamasını sunan NetworkX kullanılmıştır. Veri ön işlemede, ham CSV'nin ISO-8859-1 kodlamalı ve eski-Mac stili satır sonlarına sahip olduğu tespit edilerek düzeltilmiş; eksik kimlikli 2 kayıt çıkarılmıştır.
+
+Ağ; yatırımcılar ve şirketler iki ayrı düğüm kümesi olacak şekilde yönsüz, ağırlıklı bir iki parçalı (bipartite) affiliation ağı olarak kurulmuştur. Kenar ağırlığı, aynı yatırımcı-şirket ikilisinin tüm turlardaki toplam yatırım tutarıdır. Veri incelemesinde 92 tüzel kişiliğin (örn. PayPal, eBay, Mozilla, NVIDIA) hem yatırım alan hem kurumsal yatırımcı rolünde göründüğü belirlenmiş; bipartite yapıyı korumak için iki rol ayrı düğümler olarak modellenmiştir --- affiliation ağları literatüründe standart bir tercihtir.
+
+Zorunlu ölçümler şöyle hesaplanmıştır: ağ tipi kurulum kararından bellidir (yönsüz, ağırlıklı, iki parçalı); order/size doğrudan sayımdır; yoğunluk iki parçalı formülle ($|E|/(n_0 \times n_1)$) hesaplanmıştır. Derece dağılımı her iki küme için ayrı çıkarılıp log-log ölçekte incelenmiştir. Bipartite ağlarda üçgen bulunmadığından, kümelenme için Latapy, Magnien ve Del Vecchio'nun (2008) 4-döngü tabanlı iki parçalı katsayısı kullanılmış; bağlı bileşenler igraph ile çıkarılmıştır.
+
+Genişletilmiş analizler dev bileşen (18.559 düğüm) üzerinde yapılmıştır: ortalama en kısa yol ve çap, 400 rastgele kaynak düğümden BFS örneklemesiyle tahmin edilmiştir (büyük ağlarda standart yaklaşım; kesin değerlerden sapma tipik olarak küçüktür ve çap tahmini bir alt sınırdır). Derece assortativity katsayısı, dört merkeziyet ölçümü (derece, betweenness --- kesin hesap, closeness --- örneklenmiş, ağırlıklı PageRank ve özvektör) ve $k$-core ayrışımı igraph ile hesaplanmıştır. Yatırımcı kümesine çokluk (multiplicity) ağırlıklı izdüşüm uygulanarak ortak-yatırım ağı elde edilmiş; bu ağda global transitivity, ortalama yerel kümelenme ve Louvain algoritmasıyla (Blondel vd., 2008) topluluk tespiti yapılmıştır. Yöntemin avantajı, orijinal iki-taraflı ilişkiyi kaybetmeden hem bipartite hem tek-modlu perspektiflerin karşılaştırılabilmesidir; dezavantajı, iki parçalı kümelenme katsayısının yorumunun standart katsayıya göre daha az yaygın olmasıdır.
+
+% ==================== BULGULAR ====================
+\section{Bulgular}
+
+\subsection{Temel yapı: tip, boyut, yoğunluk, derece dağılımı}
+
+Ağ 22.124 düğüm (10.552 yatırımcı, 11.572 şirket) ve 40.978 kenardan oluşmaktadır; bipartite yoğunluk 0,000336'dır --- olası kenarların yalnızca on binde üçü gerçekleşmiştir. Derece dağılımı belirgin biçimde ağır kuyrukludur (Şekil~\ref{fig:degree}): medyan yatırımcı yalnızca 1 şirkete yatırım yapmışken SV Angel 399, New Enterprise Associates 283, Techstars 241 şirkete yatırım yapmıştır. Şirket tarafında ortalama yatırımcı sayısı 3,54, maksimum 49'dur (ecomom). Maksimum olabilirlik tahminiyle (Clauset vd., 2009) power-law üsteli yatırımcı kümesinde $\alpha \approx 1{,}80$--$1{,}87$, şirket kümesinde $\alpha \approx 1{,}62$--$2{,}02$ bulunmuştur: klasik ölçeksiz ağların 2--3 aralığının alt sınırında olan bu değerler çok ağır bir kuyruğa işaret eder; ancak saf power-law'dan sapma olasılığı da göz önünde tutulmalıdır.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/degree_distribution.png}
+\caption{Yatırımcı ve şirket derece dağılımları (log-log ölçek).}
+\label{fig:degree}
+\end{figure}
+
+\subsection{Bileşenler, yollar ve küçük-dünya özelliği}
+
+1.316 bağlı bileşen tespit edilmiştir; ancak düğümlerin \%83,9'u (18.559 düğüm) tek bir dev bileşendedir (Şekil~\ref{fig:sizes}, sol) --- Erdős ve Rényi'nin (1960) dev bileşen olgusunun ampirik yansımasıdır. Dev bileşende örneklenmiş ortalama en kısa yol 6,04, çap tahmini 17'dir. Aynı boyut ve ortalama derecedeki rastgele bir grafta beklenen yol uzunluğu $\ln(N)/\ln(\langle k \rangle) \approx 7{,}5$ olduğundan, gözlenen değer rastgele graf beklentisiyle aynı mertebededir: ağ, Watts ve Strogatz'ın (1998) tanımıyla küçük-dünya özelliği gösterir --- herhangi iki aktör ortalama 6 adımda birbirine ulaşır.
+
+Derece assortativity katsayısı $-0{,}136$'dır: yüksek dereceli düğümler ağırlıklı olarak düşük derecelilerle bağlantı kurar (disassortative yapı). Bu, hub konumundaki büyük VC/hızlandırıcıların çok sayıda küçük ve az bağlantılı şirkete yatırım yapmasının doğal sonucudur ve teknolojik/ekonomik ağlarda tipiktir (Newman, 2003).
+
+\subsection{Kümelenme}
+
+Bipartite (Latapy) kümelenme katsayısı yatırımcı kümesinde ortalama 0,314'tür. Yatırımcı ortak-yatırım izdüşümünde (10.552 düğüm, 96.818 kenar) ortalama yerel kümelenme 0,640'a çıkarken global transitivity 0,159'da kalmaktadır. Bu makas dikkat çekicidir: yerel kümelenme küçük, sıkı yatırım gruplarının varlığını gösterirken, görece düşük global transitivity ağın genelinde üçgenleşmenin hub'lar etrafında yoğunlaştığını gösterir --- yani sendikasyon davranışı ekosistemin tamamına değil, belirli çevrelere özgüdür.
+
+\subsection{Merkeziyet analizi ve $k$-core ayrışımı}
+
+Dört merkeziyet ölçümü büyük ölçüde aynı aktörleri işaret etmektedir (Tablo~\ref{tab:top10}): SV Angel derece ve betweenness'ta, Kleiner Perkins ve NEA ağırlıklı PageRank'te öndedir. Derece ile betweenness güçlü pozitif ilişkilidir; ancak saçılım geniştir (Şekil~\ref{fig:cent}, sol) --- bazı orta dereceli düğümler, farklı yatırımcı çevrelerini birbirine bağlayan köprü rolleri sayesinde beklenenden çok yüksek betweenness taşır. $k$-core ayrışımında maksimum çekirdek $k=6$'dır ve 516 düğüm içerir (Şekil~\ref{fig:cent} sağ; Şekil~\ref{fig:kcore}): düğümlerin büyük kısmı $k=1$--$2$ katmanındayken küçük, yoğun bir çekirdek ekosistemin merkezini oluşturur --- belirgin bir merkez-çeper (core-periphery) yapısı. 6-core görselleştirmesinde (Şekil~\ref{fig:kcore}) çekirdeğin Y Combinator, 500 Startups, First Round Capital, Andreessen Horowitz, Ron Conway gibi Silikon Vadisi aktörlerinden oluştuğu görülmektedir.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/centrality_kcore.png}
+\caption{Derece-betweenness ilişkisi (sol) ve $k$-core katman dağılımı (sağ).}
+\label{fig:cent}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.62\textwidth]{figures/kcore_network.png}
+\caption{Ekosistemin iç çekirdeği: 6-core altağı (516 düğüm, 2.760 kenar; mavi=yatırımcı, kırmızı=şirket, boyut=derece).}
+\label{fig:kcore}
+\end{figure}
+
+\subsection{Topluluk yapısı}
+
+Ortak-yatırım ağında Louvain algoritması 0,441 modülerlikle 54 topluluk bulmuştur; en büyük beş topluluk 2.165, 1.488, 1.228, 958 ve 736 üyelidir. Toplulukların en merkezi üyeleri incelendiğinde ekonomik olarak anlamlı bir ayrışma görülür: en büyük topluluk geç aşama kurumsal VC'lerde (Intel Capital, NEA, Kleiner Perkins) yoğunlaşırken, ikinci topluluk tohum/melek aşaması Silikon Vadisi çevresini (SV Angel, First Round Capital, Andreessen Horowitz), dördüncü ve beşinci topluluklar ise hızlandırıcı ekosistemlerini (Techstars/David Cohen ve 500 Startups/Dave McClure) temsil etmektedir. Yani topluluklar kabaca yatırım aşaması ve coğrafya/program eksenlerinde örgütlenmiştir.
+
+Bileşen ve topluluk boyutu dağılımları (Şekil~\ref{fig:sizes}) birlikte değerlendirildiğinde tutarlı bir tablo ortaya çıkar: hem bileşenler hem topluluklar boyut bakımından çok çarpıktır --- az sayıda büyük yapı, çok sayıda küçük yapı.
+
+\begin{table}[H]
+\centering
+\small
+\caption{En yüksek dereceli 10 yatırımcının çok boyutlu merkeziyet profili.}
+\label{tab:top10}
+\begin{tabular}{lrrrrr}
+\toprule
+Yatırımcı & Derece & Toplam yat. (mlyr \$) & Betw. (M) & PageRank (\textperthousand) & Core \\
+\midrule
+SV Angel                  & 399 & 1,79  & 13,78 & 1,589 & 6 \\
+New Enterprise Associates & 283 & 9,69  & 9,65  & 4,383 & 6 \\
+Techstars                 & 241 & 0,07  & 7,59  & 0,687 & 6 \\
+Intel Capital             & 228 & 4,70  & 9,44  & 2,691 & 6 \\
+Kleiner Perkins C\&B      & 225 & 11,22 & 7,27  & 4,393 & 6 \\
+500 Startups              & 221 & 0,44  & 9,41  & 1,382 & 6 \\
+Sequoia Capital           & 215 & 6,04  & 5,04  & 3,091 & 6 \\
+Draper Fisher Jurvetson   & 206 & 4,50  & 7,83  & 2,616 & 6 \\
+Accel Partners            & 186 & 6,47  & 4,50  & 3,035 & 6 \\
+First Round Capital       & 186 & 1,92  & 5,21  & 1,577 & 6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.42\textwidth]{figures/component_sizes.png}\hspace{0.4cm}
+\includegraphics[width=0.42\textwidth]{figures/community_sizes.png}
+\caption{Bağlı bileşen boyutları (sol) ve Louvain topluluk boyutları (sağ), log ölçek.}
+\label{fig:sizes}
+\end{figure}
+
+% ==================== SONUÇLAR ====================
+\section{Sonuçlar}
+
+Analiz, startup finansman ekosisteminin beş temel yapısal özelliğini ortaya koymuştur. (1) Ağ son derece seyrek ama derece bakımından son derece eşitsizdir; küçük bir hızlandırıcı/VC grubu yatırım ilişkilerinin büyük bölümünü yönlendirir. (2) Düğümlerin \%83,9'u tek bir dev bileşendedir ve ortalama 6 adımlık yollar ağı küçük-dünya yapar: bilgi ve itibar sinyalleri teorik olarak tüm ekosisteme hızla yayılabilir. (3) Negatif assortativity ve $k$-core ayrışımı, belirgin bir merkez-çeper yapısını doğrular: 516 düğümlük yoğun bir 6-core çekirdek, on binlerce çevre düğümüne hizmet eder. (4) Farklı merkeziyet ölçümleri büyük ölçüde aynı aktörleri işaret eder; ancak betweenness, derece ile tam örtüşmez --- köprü rolü, hacimden kısmen bağımsız bir stratejik konumdur. (5) Ortak-yatırım ağındaki topluluklar rastgele değildir; yatırım aşaması (tohum vs. geç aşama) ve program/coğrafya eksenlerinde ekonomik olarak yorumlanabilir kliklere ayrışır.
+
+Ayrıca 92 tüzel kişiliğin hem yatırımcı hem yatırım alan olarak görünmesi, kurumsal risk sermayesinin (corporate VC) ekosistemde göz ardı edilemeyecek bir yapısal unsur olduğuna işaret etmektedir.
+
+% ==================== TARTIŞMA ====================
+\section{Tartışma}
+
+Bulgularımız, Hochberg vd.'nin (2007) merkeziyet-performans ilişkisi bulgusuyla dolaylı olarak örtüşmektedir: en merkezi bulduğumuz aktörler (SV Angel, Sequoia, Kleiner Perkins) sektörde uzun süredir başarılı bilinen kurumlardır. Ancak veri setinde performans değişkeni (exit/IPO) bulunmadığından bu ilişki doğrudan test edilememiştir. Louvain topluluklarının aşama ve coğrafya eksenlerinde ayrışması, Sorenson ve Stuart'ın (2001) sendikasyon ağlarının coğrafi olarak yapılandığı bulgusuyla ve ``benzer aşamada yatırım yapanlar birlikte yatırım yapar'' örüntüsüyle tutarlıdır; yüksek yerel kümelenme (0,64) de Bygrave'in (1987) tarif ettiği tekrarlayan sendikasyon davranışını doğrular. Aynı Crunchbase verisinin daha erken bir kesitini inceleyen Stanway (2013) de yatırımcı ağında tek bir dev bileşenin baskınlığını ve ağır kuyruklu derece dağılımını rapor etmiştir; bizim analizimiz bu iki bulguyu doğrulamakta, üzerine $k$-core merkez-çeper yapısını ve toplulukların ekonomik eksenlerde ayrışmasını eklemektedir.
+
+Bazı bulgular literatürden ayrışmakta ya da dikkatli yorum gerektirmektedir. Veri 2013'te donmuştur; sonrasındaki büyük dönüşümler (mega-fonlar, kripto dalgası, COVID sonrası tohum patlaması) ağa yansımamıştır ve coğrafi kapsam ABD ağırlıklıdır --- bulgular küresel değil, ağırlıklı olarak 2013 öncesi Amerikan ekosistemine aittir. Çift-rollü 92 kurumun iki ayrı düğümle temsili, bipartite yapıyı korurken bu kurumların toplam merkeziyetini olduğundan düşük gösterebilir; alternatif (tek düğümlü, bipartite olmayan) modelleme ise dersin istediği bipartite ölçümleri anlamsızlaştıracaktı --- bilinçli bir ödünleşimdir. Yol ve çap değerleri örneklem tahminidir (çap bir alt sınırdır); betweenness ise kesin hesaplanmıştır. Kayıtların \%6,8'inde tutar eksiktir ve ağırlıklarda sıfır sayılmıştır; bu, bazı kenarların önemini düşük gösterebilir.
+
+Global transitivity (0,159) ile ortalama yerel kümelenme (0,640) arasındaki büyük fark, metodolojik olarak öğreticidir: tek bir ``kümelenme katsayısı'' rakamı bildirmek yanıltıcı olabilir; hub'ların baskın olduğu ağlarda iki ölçüm sistematik olarak ayrışır. Benzer biçimde, projeksiyon işleminin kümelenmeyi mekanik olarak şişirdiği (bir şirkete yatırım yapan her 3+ yatırımcı otomatik üçgen oluşturur) unutulmamalıdır.
+
+Gelecek çalışmalar için: (1) zaman damgaları kullanılarak ağın evrimi (dinamik ağ analizi, preferential attachment'ın doğrudan testi) incelenebilir; (2) sektör/coğrafya nitelikleriyle homofili analizi yapılabilir; (3) topluluk yapısı Leiden gibi daha güncel algoritmalarla sınanabilir; (4) güncel Crunchbase verisiyle 2013 sonrası dönem karşılaştırılabilir; (5) şirketlerin sonraki tur alma olasılığı, ağ konumu değişkenleriyle (çekirdek üyeliği, merkezi yatırımcıya bağlılık) modellenebilir.
+
+% ==================== KAYNAKÇA ====================
+\newpage
+\begin{thebibliography}{99}
+\setlength{\itemsep}{4pt}
+
+\bibitem{blondel2008}
+Blondel, V. D., Guillaume, J.-L., Lambiotte, R., \& Lefebvre, E. (2008). Fast unfolding of communities in large networks. \textit{Journal of Statistical Mechanics: Theory and Experiment}, P10008.
+
+\bibitem{bygrave1987}
+Bygrave, W. D. (1987). Syndicated investments by venture capital firms: A networking perspective. \textit{Journal of Business Venturing}, 2(2), 139--154.
+
+\bibitem{clauset2009}
+Clauset, A., Shalizi, C. R., \& Newman, M. E. J. (2009). Power-law distributions in empirical data. \textit{SIAM Review}, 51(4), 661--703.
+
+\bibitem{crunchbase2013}
+Crunchbase (2013). \textit{Open Data Export} (Ekim 2013 anlık görüntüsü), CC-BY-NC Lisansı. \url{https://github.com/dsagal/crunchbase-october-2013}
+
+\bibitem{csardi2006}
+Csárdi, G., \& Nepusz, T. (2006). The igraph software package for complex network research. \textit{InterJournal Complex Systems}, 1695.
+
+\bibitem{erdos1960}
+Erdős, P., \& Rényi, A. (1960). On the evolution of random graphs. \textit{Publications of the Mathematical Institute of the Hungarian Academy of Sciences}, 5, 17--61.
+
+\bibitem{hochberg2007}
+Hochberg, Y. V., Ljungqvist, A., \& Lu, Y. (2007). Whom you know matters: Venture capital networks and investment performance. \textit{The Journal of Finance}, 62(1), 251--301.
+
+\bibitem{latapy2008}
+Latapy, M., Magnien, C., \& Del Vecchio, N. (2008). Basic notions for the analysis of large two-mode networks. \textit{Social Networks}, 30(1), 31--48.
+
+\bibitem{newman2003}
+Newman, M. E. J. (2003). The structure and function of complex networks. \textit{SIAM Review}, 45(2), 167--256.
+
+\bibitem{sorenson2001}
+Sorenson, O., \& Stuart, T. E. (2001). Syndication networks and the spatial distribution of venture capital investments. \textit{American Journal of Sociology}, 106(6), 1546--1588.
+
+\bibitem{stanway2013}
+Stanway, A. (2013). \textit{Crunchbase network analysis}. GitHub deposu. \url{https://github.com/astanway/Crunchbase-Network-Analysis}
+
+\bibitem{watts1998}
+Watts, D. J., \& Strogatz, S. H. (1998). Collective dynamics of `small-world' networks. \textit{Nature}, 393(6684), 440--442.
+
+\end{thebibliography}
+
+\end{document}

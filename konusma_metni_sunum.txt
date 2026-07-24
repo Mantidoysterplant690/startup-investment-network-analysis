@@ -1,0 +1,51 @@
+SUNUM KONUŞMA METNİ — BİL403-503 Dönem Projesi
+Ali Hakan Kıncal · 221101064
+============================================================
+
+SLAYT 1: Startup Ekosisteminde
+------------------------------------------------------------
+Merhaba, ben Ali Hakan Kıncal. BİL403 Sosyal Ağlar dönem projemde startup ekosistemini bir sosyal ağ olarak modelledim. Crunchbase'in 2013 açık verisini kullanarak yatırımcılar ile startuplar arasındaki ilişki ağını inceledim.
+
+SLAYT 2: Motivasyon ve Araştırma Soruları
+------------------------------------------------------------
+Dört soruya cevap aradım: ağın temel yapısı; ağır kuyruk, dev bileşen ve küçük-dünya gibi klasik örüntülerin varlığı; merkezi aktörlerin kimler olduğu; ve yatırımcılar arasında anlamlı toplulukların olup olmadığı.
+
+SLAYT 3: Veri: Crunchbase Ekim 2013 Açık Dökümü
+------------------------------------------------------------
+Veri Crunchbase'in Ekim 2013 açık dökümü. 52 bin 868 yatırım kaydı, 11 bin 572 şirket ve 10 bin 552 yatırımcı var. Her satır bir yatırım olayını temsil ediyor. Encoding ve satır sonu sorunlarını ön işlemede düzelttim. Dikkat çekici bir nokta: 92 kurum hem yatırımcı hem yatırım alan rolünde.
+
+SLAYT 4: Yöntem: İki Parçalı (Bipartite) Ağ Modeli
+------------------------------------------------------------
+Ağı bipartite kurdum: bir tarafta yatırımcılar, diğer tarafta şirketler. Kenar ağırlığı toplam yatırım tutarı. Çift rollü kurumları iki ayrı düğüm olarak modelledim ki bipartite yapı bozulmasın. Analizlerde ağırlıklı olarak igraph kullandım; yol uzunluklarını örneklemeyle, betweenness'ı kesin hesapladım.
+
+SLAYT 5: Temel Ölçümler
+------------------------------------------------------------
+Temel rakamlar: 22 bin düğüm, 41 bin kenar. Ağ son derece seyrek - yoğunluk on binde üç. Buna rağmen düğümlerin yüzde 84'ü tek bir dev bileşende toplanıyor. Bipartite kümelenme katsayısı 0,31. Ağın tipi: yönsüz, ağırlıklı, iki parçalı.
+
+SLAYT 6: Derece Dağılımı: Ağır Kuyruk
+------------------------------------------------------------
+Derece dağılımı her iki tarafta da ağır kuyruklu. Medyan yatırımcı tek bir şirkete yatırım yapmışken SV Angel 399 şirkete yatırım yapmış. MLE ile tahmin ettiğim power-law üsteli 1,8 ile 2 arasında - çok ağır bir kuyruk. Bu, zengin daha zenginleşir mekanizmasının klasik izi.
+
+SLAYT 7: Küçük Dünya ve Merkez–Çeper Yapısı
+------------------------------------------------------------
+Dev bileşende ortalama en kısa yol 6 - klasik altı derece ayrılık. Assortativity negatif: büyük hub'lar çok sayıda küçük oyuncuya bağlanıyor. k-core ayrışımı belirgin bir merkez-çeper yapısı gösteriyor: en içteki 6-core çekirdekte sadece 516 düğüm var. Soldaki grafikte derece ile betweenness ilişkisi görülüyor: güçlü korelasyon ama geniş saçılım.
+
+SLAYT 8: Ekosistemin İç Çekirdeği (6-core)
+------------------------------------------------------------
+Bu görsel ekosistemin en yoğun bağlı çekirdeği: 6-core altağı. 516 düğümlük bu çekirdekte Y Combinator, 500 Startups, First Round Capital, Andreessen Horowitz gibi Silikon Vadisi aktörleri var. Ekosistemin kalbi burada atıyor.
+
+SLAYT 9: Topluluk Yapısı: Yatırım Klikleri
+------------------------------------------------------------
+Ortak-yatırım ağında Louvain algoritması 54 topluluk buldu, modülerlik 0,44. Topluluklar rastgele değil: en büyüğü geç aşama kurumsal VC'ler, ikincisi Silikon Vadisi tohum çevresi, ayrıca Techstars ve 500 Startups kendi ekosistemlerini oluşturuyor. Yani yatırım klikleri aşama ve coğrafya eksenlerinde örgütleniyor.
+
+SLAYT 10: Sonuçlar
+------------------------------------------------------------
+Beş ana sonuç: Birincisi, ağ seyrek ama son derece eşitsiz. İkincisi, küçük dünya özelliği bilginin hızla yayılmasına imkan veriyor. Üçüncüsü, belirgin bir merkez-çeper yapısı var. Dördüncüsü, farklı merkeziyet ölçümleri büyük ölçüde aynı aktörleri gösteriyor. Beşincisi, yatırım toplulukları ekonomik olarak anlamlı eksenlerde ayrışıyor.
+
+SLAYT 11: Kısıtlar ve Gelecek Çalışmalar
+------------------------------------------------------------
+Kısıtlar: veri 2013'te donmuş ve ABD ağırlıklı; performans verisi olmadığı için merkeziyet-başarı ilişkisini test edemedim. Gelecekte dinamik ağ analizi, homofili analizi ve güncel veriyle karşılaştırma yapılabilir.
+
+SLAYT 12: Demo
+------------------------------------------------------------
+Şimdi IPython notebook üzerinde canlı demoya geçiyorum. Veriyi yükleyip ağı igraph ile kuracağım, temel ölçümleri ve merkeziyet analizlerini çalıştırıp topluluk tespitini göstereceğim. Teşekkürler.
